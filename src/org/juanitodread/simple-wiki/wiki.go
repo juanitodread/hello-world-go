@@ -6,6 +6,8 @@ import (
   "net/http"
 )
 
+var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+
 type Page struct {
   Title string
   Body  []byte
@@ -32,7 +34,13 @@ func loadPage(title string) (*Page, error) {
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
   title := r.URL.Path[len("/view/"):]
-  p, _ := loadPage(title)
+  p, err := loadPage(title)
+
+  if err != nil {
+    http.Redirect(w, r, "/edit/" + title, http.StatusFound)
+    return
+  }
+
   renderTemplate(w, "view", p)
 }
 
@@ -47,13 +55,33 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
   renderTemplate(w, "edit", p)
 }
 
+func saveHandler(w http.ResponseWriter, r *http.Request) {
+  title := r.URL.Path[len("/save/"):]
+  body := r.FormValue("body")
+  p := &Page{Title: title, Body: []byte(body)}
+  err := p.save()
+
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+
+  http.Redirect(w, r, "/view/" + title, http.StatusFound)
+}
+
 func renderTemplate(w http.ResponseWriter, tmplate string, p *Page) {
-  t, _ := template.ParseFiles(tmplate + ".html")
-  t.Execute(w, p)
+  err := templates.ExecuteTemplate(w, tmplate + ".html", p)
+
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
 }
 
 func main() {
   http.HandleFunc("/view/", viewHandler)
   http.HandleFunc("/edit/", editHandler)
+  http.HandleFunc("/save/", saveHandler)
+
   http.ListenAndServe(":3535", nil)
 }
