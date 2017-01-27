@@ -1,6 +1,7 @@
 package main
 
 import (
+  "encoding/json"
   "html/template"
   "io/ioutil"
   "net/http"
@@ -9,8 +10,8 @@ import (
 var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
 
 type Page struct {
-  Title string
-  Body  []byte
+  Title string `json:"title"`
+  Body  []byte `json:"body"`
 }
 
 // Saves the Page body object to a text file. The textfile is named according
@@ -69,6 +70,14 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
   http.Redirect(w, r, "/view/" + title, http.StatusFound)
 }
 
+func jsonViewHandler(w http.ResponseWriter, r *http.Request) {
+  title := r.URL.Path[len("/"):]
+  p, _ := loadPage(title)
+
+  w.Header().Set("Content-Type", "application/json")
+  json.NewEncoder(w).Encode(p)
+}
+
 func renderTemplate(w http.ResponseWriter, tmplate string, p *Page) {
   err := templates.ExecuteTemplate(w, tmplate + ".html", p)
 
@@ -82,6 +91,7 @@ func main() {
   http.HandleFunc("/view/", viewHandler)
   http.HandleFunc("/edit/", editHandler)
   http.HandleFunc("/save/", saveHandler)
+  http.HandleFunc("/json/", jsonViewHandler)
 
   http.ListenAndServe(":3535", nil)
 }
