@@ -1,1 +1,3 @@
-This is a simple page, and now it can be saved
+This is a simple page, and now it can be saved.
+
+Saved now :D
