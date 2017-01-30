@@ -9,7 +9,9 @@ import (
   "strings"
 )
 
-var templates = template.Must(template.ParseFiles("edit.html", "view.html", "list.html"))
+var templates = template.Must(template.ParseFiles("edit.html",
+  "view.html",
+  "list.html"))
 
 type Page struct {
   Title string `json:"title"`
