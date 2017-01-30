@@ -2,7 +2,7 @@ package main
 
 import (
   "encoding/json"
-  "html/template"
+  "text/template"
   "io/ioutil"
   "net/http"
   "os"
